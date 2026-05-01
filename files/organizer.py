@@ -1,0 +1,172 @@
+"""
+File Organizer — Automatically sort files into folders by type.
+
+Usage:
+    python -m src.organizer /path/to/messy/folder
+    python -m src.organizer /path/to/messy/folder --dry-run
+    python -m src.organizer /path/to/messy/folder --undo
+"""
+
+import argparse
+import json
+import shutil
+from datetime import datetime
+from pathlib import Path
+
+# ---------------------------------------------------------------------------
+# Category mapping — add or tweak as you like
+# ---------------------------------------------------------------------------
+CATEGORIES: dict[str, list[str]] = {
+    "Images": [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".svg", ".webp", ".ico", ".tiff"],
+    "Documents": [".pdf", ".doc", ".docx", ".txt", ".rtf", ".odt", ".xls", ".xlsx", ".pptx", ".csv"],
+    "Audio": [".mp3", ".wav", ".flac", ".aac", ".ogg", ".wma", ".m4a"],
+    "Video": [".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".webm"],
+    "Archives": [".zip", ".tar", ".gz", ".rar", ".7z", ".bz2"],
+    "Code": [".py", ".js", ".ts", ".html", ".css", ".java", ".cpp", ".c", ".go", ".rs", ".rb"],
+    "Data": [".json", ".xml", ".yaml", ".yml", ".sql", ".db", ".sqlite"],
+    "Executables": [".exe", ".msi", ".dmg", ".app", ".deb", ".rpm", ".sh", ".bat"],
+}
+
+
+def get_category(extension: str) -> str:
+    """Return the category name for a given file extension."""
+    ext = extension.lower()
+    for category, extensions in CATEGORIES.items():
+        if ext in extensions:
+            return category
+    return "Other"
+
+
+def build_move_plan(source_dir: Path) -> list[dict]:
+    """
+    Scan *source_dir* and return a list of planned moves.
+
+    Each entry: {"src": <original path>, "dest": <target path>, "category": <str>}
+    Only top-level files are considered (no recursion into sub-dirs).
+    """
+    plan = []
+    for item in sorted(source_dir.iterdir()):
+        # Skip directories, hidden files, and our own log
+        if item.is_dir() or item.name.startswith(".") or item.name == "organizer_log.json":
+            continue
+
+        category = get_category(item.suffix)
+        dest_dir = source_dir / category
+        dest_file = dest_dir / item.name
+
+        # Handle name collisions
+        if dest_file.exists():
+            stem = item.stem
+            suffix = item.suffix
+            counter = 1
+            while dest_file.exists():
+                dest_file = dest_dir / f"{stem}_{counter}{suffix}"
+                counter += 1
+
+        plan.append({
+            "src": str(item),
+            "dest": str(dest_file),
+            "category": category,
+        })
+    return plan
+
+
+def execute_plan(plan: list[dict], *, dry_run: bool = False) -> None:
+    """Move files according to *plan*. If *dry_run*, only print what would happen."""
+    if not plan:
+        print("✓ Nothing to organize — folder is already clean!")
+        return
+
+    for entry in plan:
+        src = Path(entry["src"])
+        dest = Path(entry["dest"])
+
+        if dry_run:
+            print(f"  [DRY RUN] {src.name}  →  {dest.parent.name}/{dest.name}")
+        else:
+            dest.parent.mkdir(exist_ok=True)
+            shutil.move(str(src), str(dest))
+            print(f"  ✓ {src.name}  →  {dest.parent.name}/{dest.name}")
+
+
+def save_log(source_dir: Path, plan: list[dict]) -> Path:
+    """Save a JSON log so the operation can be undone later."""
+    log_path = source_dir / "organizer_log.json"
+    log_data = {
+        "timestamp": datetime.now().isoformat(),
+        "source_dir": str(source_dir),
+        "moves": plan,
+    }
+    log_path.write_text(json.dumps(log_data, indent=2))
+    return log_path
+
+
+def undo(source_dir: Path) -> None:
+    """Reverse the last organize operation using the saved log."""
+    log_path = source_dir / "organizer_log.json"
+    if not log_path.exists():
+        print("✗ No organizer_log.json found — nothing to undo.")
+        return
+
+    log_data = json.loads(log_path.read_text())
+    for entry in log_data["moves"]:
+        dest = Path(entry["dest"])
+        src = Path(entry["src"])
+        if dest.exists():
+            shutil.move(str(dest), str(src))
+            print(f"  ↩ {dest.name}  →  {src.name}")
+
+    # Clean up empty category folders
+    for entry in log_data["moves"]:
+        cat_dir = Path(entry["dest"]).parent
+        if cat_dir.exists() and not any(cat_dir.iterdir()):
+            cat_dir.rmdir()
+
+    log_path.unlink()
+    print("✓ Undo complete!")
+
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Organize files in a directory by type.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="Examples:\n"
+               "  python -m src.organizer ~/Downloads\n"
+               "  python -m src.organizer ~/Downloads --dry-run\n"
+               "  python -m src.organizer ~/Downloads --undo",
+    )
+    parser.add_argument("directory", type=Path, help="Target directory to organize")
+    parser.add_argument("--dry-run", action="store_true", help="Preview changes without moving files")
+    parser.add_argument("--undo", action="store_true", help="Reverse the last organize operation")
+
+    args = parser.parse_args()
+    source_dir = args.directory.resolve()
+
+    if not source_dir.is_dir():
+        print(f"✗ '{source_dir}' is not a valid directory.")
+        return
+
+    if args.undo:
+        undo(source_dir)
+        return
+
+    print(f"\n📂 Scanning: {source_dir}\n")
+    plan = build_move_plan(source_dir)
+
+    if args.dry_run:
+        print(f"Found {len(plan)} file(s) to organize:\n")
+        execute_plan(plan, dry_run=True)
+        print(f"\nRun without --dry-run to apply changes.")
+    else:
+        execute_plan(plan)
+        if plan:
+            log_path = save_log(source_dir, plan)
+            print(f"\n✓ Organized {len(plan)} file(s). Log saved to {log_path.name}")
+            print("  Run with --undo to reverse.")
+
+
+if __name__ == "__main__":
+    main()
