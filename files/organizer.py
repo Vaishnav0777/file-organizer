@@ -173,7 +173,14 @@ def main() -> None:
         execute_plan(plan)
         if plan:
             log_path = save_log(source_dir, plan)
-            print(f"\n✓ Organized {len(plan)} file(s). Log saved to {log_path.name}")
+            total_size = sum(Path(e["src"]).stat().st_size for e in plan)
+if total_size < 1024:
+    size_str = f"{total_size} B"
+elif total_size < 1024 * 1024:
+    size_str = f"{total_size / 1024:.1f} KB"
+else:
+    size_str = f"{total_size / (1024 * 1024):.1f} MB"
+print(f"\n✓ Organized {len(plan)} file(s) ({size_str}). Log saved to {log_path.name}")
             print("  Run with --undo to reverse.")
 
 
