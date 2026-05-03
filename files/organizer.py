@@ -5,6 +5,7 @@ Usage:
     python -m src.organizer /path/to/messy/folder
     python -m src.organizer /path/to/messy/folder --dry-run
     python -m src.organizer /path/to/messy/folder --undo
+    python -m src.organizer /path/to/messy/folder --recursive
 """
 
 import argparse
@@ -37,17 +38,24 @@ def get_category(extension: str) -> str:
     return "Other"
 
 
-def build_move_plan(source_dir: Path) -> list[dict]:
+def build_move_plan(source_dir: Path, *, recursive: bool = False) -> list[dict]:
     """
     Scan *source_dir* and return a list of planned moves.
 
     Each entry: {"src": <original path>, "dest": <target path>, "category": <str>}
-    Only top-level files are considered (no recursion into sub-dirs).
+    If recursive is False, only top-level files are considered.
+    If recursive is True, files in subdirectories are also organized.
     """
     plan = []
-    for item in sorted(source_dir.iterdir()):
+    items = sorted(source_dir.rglob("*")) if recursive else sorted(source_dir.iterdir())
+
+    for item in items:
         # Skip directories, hidden files, and our own log
         if item.is_dir() or item.name.startswith(".") or item.name == "organizer_log.json":
+            continue
+
+        # Skip files already inside a category folder
+        if item.parent != source_dir and item.parent.name in CATEGORIES:
             continue
 
         category = get_category(item.suffix)
@@ -141,6 +149,7 @@ def main() -> None:
     parser.add_argument("directory", type=Path, help="Target directory to organize")
     parser.add_argument("--dry-run", action="store_true", help="Preview changes without moving files")
     parser.add_argument("--undo", action="store_true", help="Reverse the last organize operation")
+    parser.add_argument("--recursive", action="store_true", help="Scan subdirectories recursively")
 
     args = parser.parse_args()
     source_dir = args.directory.resolve()
@@ -154,7 +163,7 @@ def main() -> None:
         return
 
     print(f"\n📂 Scanning: {source_dir}\n")
-    plan = build_move_plan(source_dir)
+    plan = build_move_plan(source_dir, recursive=args.recursive)
 
     if args.dry_run:
         print(f"Found {len(plan)} file(s) to organize:\n")
