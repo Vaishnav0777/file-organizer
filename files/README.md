@@ -25,6 +25,9 @@ python -m src.organizer ~/Downloads
 
 # Changed your mind? Undo it
 python -m src.organizer ~/Downloads --undo
+
+# Organize including subdirectories
+python -m src.organizer ~/Downloads --recursive
 ```
 
 ## Example
