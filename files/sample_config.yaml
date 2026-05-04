@@ -1,0 +1,36 @@
+# Custom file categories for the organizer
+# Modify this file to define your own sorting rules
+
+categories:
+  Images:
+    - .jpg
+    - .jpeg
+    - .png
+    - .gif
+    - .svg
+    - .webp
+  Documents:
+    - .pdf
+    - .doc
+    - .docx
+    - .txt
+    - .rtf
+  Spreadsheets:
+    - .xls
+    - .xlsx
+    - .csv
+  Code:
+    - .py
+    - .js
+    - .ts
+    - .html
+    - .css
+  Audio:
+    - .mp3
+    - .wav
+    - .flac
+  Video:
+    - .mp4
+    - .mkv
+    - .avi
+    - .mov

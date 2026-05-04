@@ -7,7 +7,11 @@ Usage:
     python -m src.organizer /path/to/messy/folder --undo
     python -m src.organizer /path/to/messy/folder --recursive
 """
-
+try:
+    import yaml
+    HAS_YAML = True
+except ImportError:
+    HAS_YAML = False
 import argparse
 import json
 import shutil
@@ -28,7 +32,13 @@ CATEGORIES: dict[str, list[str]] = {
     "Executables": [".exe", ".msi", ".dmg", ".app", ".deb", ".rpm", ".sh", ".bat"],
 }
 
-
+def load_categories(config_path: Path) -> dict[str, list[str]]:
+    """Load custom categories from a YAML config file."""
+    if not HAS_YAML:
+        print("✗ PyYAML is required for --config. Install it with: pip install pyyaml")
+        raise SystemExit(1)
+    data = yaml.safe_load(config_path.read_text())
+    return data.get("categories", CATEGORIES)
 def get_category(extension: str) -> str:
     """Return the category name for a given file extension."""
     ext = extension.lower()
@@ -150,6 +160,8 @@ def main() -> None:
     parser.add_argument("--dry-run", action="store_true", help="Preview changes without moving files")
     parser.add_argument("--undo", action="store_true", help="Reverse the last organize operation")
     parser.add_argument("--recursive", action="store_true", help="Scan subdirectories recursively")
+    parser.add_argument("--config", type=Path, default=None, help="Path to YAML config file for custom categories")
+
 
     args = parser.parse_args()
     source_dir = args.directory.resolve()
@@ -161,7 +173,10 @@ def main() -> None:
     if args.undo:
         undo(source_dir)
         return
-
+    global CATEGORIES
+    if args.config:
+        CATEGORIES = load_categories(args.config)
+        print(f"📋 Using custom categories from: {args.config.name}")
     print(f"\n📂 Scanning: {source_dir}\n")
     plan = build_move_plan(source_dir, recursive=args.recursive)
 
