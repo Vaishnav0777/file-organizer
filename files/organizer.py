@@ -118,7 +118,16 @@ def save_log(source_dir: Path, plan: list[dict]) -> Path:
     log_path.write_text(json.dumps(log_data, indent=2))
     return log_path
 
-
+def print_summary(plan: list[dict]) -> None:
+    """Print a breakdown of files organized by category."""
+    from collections import Counter
+    counts = Counter(entry["category"] for entry in plan)
+    print("\n  Category        Files")
+    print("  ─────────────── ─────")
+    for category, count in sorted(counts.items(), key=lambda x: -x[1]):
+        bar = "█" * count
+        print(f"  {category:<17} {count:>3}  {bar}")
+    print()
 def undo(source_dir: Path) -> None:
     """Reverse the last organize operation using the saved log."""
     log_path = source_dir / "organizer_log.json"
@@ -161,6 +170,7 @@ def main() -> None:
     parser.add_argument("--undo", action="store_true", help="Reverse the last organize operation")
     parser.add_argument("--recursive", action="store_true", help="Scan subdirectories recursively")
     parser.add_argument("--config", type=Path, default=None, help="Path to YAML config file for custom categories")
+    parser.add_argument("--summary", action="store_true", help="Show category breakdown after organizing")
 
 
     args = parser.parse_args()
@@ -197,6 +207,8 @@ else:
     size_str = f"{total_size / (1024 * 1024):.1f} MB"
 print(f"\n✓ Organized {len(plan)} file(s) ({size_str}). Log saved to {log_path.name}")
             print("  Run with --undo to reverse.")
+if args.summary:
+            print_summary(plan)
 
 
 if __name__ == "__main__":
