@@ -1,4 +1,4 @@
-"""
+f"""
 File Organizer — Automatically sort files into folders by type.
 
 Usage:
@@ -47,9 +47,7 @@ def get_category(extension: str) -> str:
             return category
     return "Other"
 
-
-def build_move_plan(source_dir: Path, *, recursive: bool = False) -> list[dict]:
-    """
+def build_move_plan(source_dir: Path, *, recursive: bool = False, min_size: int = 0) -> list[dict]:    """
     Scan *source_dir* and return a list of planned moves.
 
     Each entry: {"src": <original path>, "dest": <target path>, "category": <str>}
@@ -62,6 +60,9 @@ def build_move_plan(source_dir: Path, *, recursive: bool = False) -> list[dict]:
     for item in items:
         # Skip directories, hidden files, and our own log
         if item.is_dir() or item.name.startswith(".") or item.name == "organizer_log.json":
+            continue
+# Skip files smaller than min_size
+        if min_size > 0 and item.stat().st_size < min_size:
             continue
 
         # Skip files already inside a category folder
@@ -171,6 +172,7 @@ def main() -> None:
     parser.add_argument("--recursive", action="store_true", help="Scan subdirectories recursively")
     parser.add_argument("--config", type=Path, default=None, help="Path to YAML config file for custom categories")
     parser.add_argument("--summary", action="store_true", help="Show category breakdown after organizing")
+    parser.add_argument("--min-size", type=int, default=0, help="Only organize files larger than N bytes (e.g. 1024 for 1KB)")
 
 
     args = parser.parse_args()
@@ -188,7 +190,7 @@ def main() -> None:
         CATEGORIES = load_categories(args.config)
         print(f"📋 Using custom categories from: {args.config.name}")
     print(f"\n📂 Scanning: {source_dir}\n")
-    plan = build_move_plan(source_dir, recursive=args.recursive)
+    plan = build_move_plan(source_dir, recursive=args.recursive, min_size=args.min_size)
 
     if args.dry_run:
         print(f"Found {len(plan)} file(s) to organize:\n")
