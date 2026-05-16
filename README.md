@@ -96,8 +96,8 @@ file-organizer/
 
 ## Roadmap
 
-- [ ] Recursive mode for nested directories
-- [ ] Custom category config via YAML file
+- [x] Recursive mode for nested directories
+- [x] Custom category config via YAML file
 - [ ] Watch mode — auto-organize new files as they appear
 - [ ] Size-based filtering (e.g., move files > 100MB)
 
