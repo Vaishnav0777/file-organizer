@@ -100,6 +100,8 @@ file-organizer/
 - [x] Custom category config via YAML file
 - [ ] Watch mode — auto-organize new files as they appear
 - [ ] Size-based filtering (e.g., move files > 100MB)
+- [ ] Export organization report as JSON
+- [ ] Add colored terminal output with rich library
 
 ## License
 
