@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 f"""
 File Organizer — Automatically sort files into folders by type.
 
