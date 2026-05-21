@@ -93,6 +93,13 @@ file-organizer/
 ├── LICENSE
 └── README.md
 ```
+## Technologies
+
+- Python 3.11 (standard library only, no external dependencies)
+- argparse for CLI
+- pathlib for cross-platform file handling
+- shutil for file operations
+- Optional: PyYAML for custom config support
 
 ## Roadmap
 
