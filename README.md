@@ -113,3 +113,7 @@ file-organizer/
 ## License
 
 MIT
+
+## Author
+
+Vaishnav Venkatesh - [GitHub](https://github.com/Vaishnav0777)
