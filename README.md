@@ -117,3 +117,7 @@ MIT
 ## Author
 
 Vaishnav Venkatesh - [GitHub](https://github.com/Vaishnav0777)
+
+## Status
+
+![Maintained](https://img.shields.io/badge/maintained-yes-green)
