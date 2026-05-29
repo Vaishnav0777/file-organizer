@@ -26,3 +26,10 @@
 
 \- Proper Python package structure with pyproject.toml
 
+
+## v1.1.0 - 2026-05-29
+
+### Added
+- Author section in README
+- .editorconfig for formatting
+- Contributing guide
