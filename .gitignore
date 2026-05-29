@@ -28,3 +28,7 @@ htmlcov/
 
 # Logs
 organizer_log.json
+
+*.log
+*.tmp
+*.bak
