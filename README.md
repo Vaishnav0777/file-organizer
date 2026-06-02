@@ -123,3 +123,11 @@ Vaishnav Venkatesh - [GitHub](https://github.com/Vaishnav0777)
 ![Maintained](https://img.shields.io/badge/maintained-yes-green)
 
 ![Python](https://img.shields.io/badge/python-3.11-blue) ![License](https://img.shields.io/badge/license-MIT-green)
+
+## License
+
+MIT License. See [LICENSE](LICENSE) for details.
+
+## License
+
+MIT License. See [LICENSE](LICENSE) for details.
