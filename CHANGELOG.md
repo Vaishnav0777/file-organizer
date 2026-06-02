@@ -33,3 +33,8 @@
 - Author section in README
 - .editorconfig for formatting
 - Contributing guide
+
+## v1.2.0 - 2026-06-02
+
+### Added
+- SECURITY.md with vulnerability reporting policy
