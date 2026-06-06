@@ -135,3 +135,7 @@ MIT License. See [LICENSE](LICENSE) for details.
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first.
+
+## Acknowledgements
+
+Built with Python 3.11. Inspired by the need to keep Downloads folders clean.
