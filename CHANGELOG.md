@@ -38,3 +38,10 @@
 
 ### Added
 - SECURITY.md with vulnerability reporting policy
+
+## v1.3.0 - 2026-06-10
+
+### Added
+- Contributing section in README
+- Acknowledgements section in README
+- Virtual environment folders to gitignore
